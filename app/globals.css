@@ -78,23 +78,23 @@
   --accent-midnight: #0d1726;
 }
 
-/* ─── "Light" Theme — Lighter Dark Variant (visibly distinct) ─── */
+/* ─── Light Theme — True Light Mode ─── */
 [data-theme="light"] {
-  --canvas: #2a2d33;
-  --canvas-soft: #353840;
-  --canvas-card: #32363d;
-  --canvas-mid: #555a63;
-  --ink: #f5f5f5;
-  --ink-hover: #eaeae7;
-  --body-text: #d0d1d5;
-  --body-mid: #9ca0a8;
-  --hairline: #444952;
-  --accent-sunset: #ff8c3a;
-  --accent-sunset-soft: #ffd4a8;
-  --accent-dusk: #8b5cf6;
-  --accent-twilight: #d4c5ff;
-  --accent-breeze: #b0d3f0;
-  --accent-midnight: #1e2a3e;
+  --canvas: #f5f5f7;
+  --canvas-soft: #eaeaed;
+  --canvas-card: #ffffff;
+  --canvas-mid: #c8c9cd;
+  --ink: #0a0a0a;
+  --ink-hover: #1a1a1a;
+  --body-text: #3a3a3e;
+  --body-mid: #6e7178;
+  --hairline: #d4d5d9;
+  --accent-sunset: #e56a0f;
+  --accent-sunset-soft: #ffc285;
+  --accent-dusk: #6d28d9;
+  --accent-twilight: #8b5cf6;
+  --accent-breeze: #3b82f6;
+  --accent-midnight: #e8edf5;
 }
 
 /* ─── Base Styles ─── */
@@ -275,7 +275,7 @@
     gap: 8px;
     background-color: transparent;
     color: var(--ink);
-    border: 1px solid rgba(255, 255, 255, 0.25);
+    border: 1px solid var(--hairline);
     border-radius: 9999px;
     padding: 8px 16px;
     font-family: var(--font-sans);
@@ -287,8 +287,8 @@
     white-space: nowrap;
   }
   .btn-pill-outline:hover {
-    border-color: rgba(255, 255, 255, 0.5);
-    background-color: rgba(255, 255, 255, 0.05);
+    border-color: var(--body-mid);
+    background-color: var(--canvas-soft);
   }
 
   .btn-pill-outline-sm {
@@ -298,7 +298,7 @@
     gap: 6px;
     background-color: transparent;
     color: var(--ink);
-    border: 1px solid rgba(255, 255, 255, 0.25);
+    border: 1px solid var(--hairline);
     border-radius: 9999px;
     padding: 4px 12px;
     font-family: var(--font-sans);
@@ -310,8 +310,8 @@
     white-space: nowrap;
   }
   .btn-pill-outline-sm:hover {
-    border-color: rgba(255, 255, 255, 0.5);
-    background-color: rgba(255, 255, 255, 0.05);
+    border-color: var(--body-mid);
+    background-color: var(--canvas-soft);
   }
 
   .btn-pill-outline-sm.active {
@@ -339,7 +339,7 @@
     color: var(--body-mid);
   }
   .input-field:focus {
-    border-color: rgba(255, 255, 255, 0.4);
+    border-color: var(--accent-dusk);
   }
   .input-field[aria-invalid="true"] {
     border-color: #f87171;
