@@ -96,7 +96,7 @@ function TransactionRow({ tx, index }: { tx: Transaction; index: number }) {
     >
       <StatusIcon status={tx.status} />
 
-      {/* Description & recipient */}
+      {/* Description & recipient & date */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div
           className="text-body-sm"
@@ -109,18 +109,39 @@ function TransactionRow({ tx, index }: { tx: Transaction; index: number }) {
         >
           {tx.description}
         </div>
-        {tx.recipient && (
-          <div
-            className="text-caption-mono-sm"
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            marginTop: 2,
+          }}
+        >
+          {tx.recipient && (
+            <span
+              className="text-caption-mono-sm"
+              style={{
+                color: "var(--body-mid)",
+                fontSize: 11,
+              }}
+            >
+              {tx.recipient}
+            </span>
+          )}
+          {tx.recipient && (
+            <span style={{ color: "var(--canvas-mid)", fontSize: 11 }}>•</span>
+          )}
+          <span
             style={{
-              color: "var(--body-mid)",
-              marginTop: 2,
+              color: "var(--canvas-mid)",
               fontSize: 11,
+              fontFamily: "var(--font-mono)",
+              letterSpacing: "0.5px",
             }}
           >
-            {tx.recipient}
-          </div>
-        )}
+            {formatDate(tx.createdAt)}
+          </span>
+        </div>
       </div>
 
       {/* Amount & status */}

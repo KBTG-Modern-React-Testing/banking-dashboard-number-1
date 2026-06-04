@@ -78,23 +78,23 @@
   --accent-midnight: #0d1726;
 }
 
-/* ─── "Light" Theme — Softer Dark Variant ─── */
+/* ─── "Light" Theme — Lighter Dark Variant (visibly distinct) ─── */
 [data-theme="light"] {
-  --canvas: #1a1c20;
-  --canvas-soft: #24262b;
-  --canvas-card: #222428;
-  --canvas-mid: #44484e;
-  --ink: #f0f0f0;
-  --ink-hover: #e8e8e5;
-  --body-text: #c8c9cd;
-  --body-mid: #8e929a;
-  --hairline: #2e3136;
+  --canvas: #2a2d33;
+  --canvas-soft: #353840;
+  --canvas-card: #32363d;
+  --canvas-mid: #555a63;
+  --ink: #f5f5f5;
+  --ink-hover: #eaeae7;
+  --body-text: #d0d1d5;
+  --body-mid: #9ca0a8;
+  --hairline: #444952;
   --accent-sunset: #ff8c3a;
   --accent-sunset-soft: #ffd4a8;
   --accent-dusk: #8b5cf6;
   --accent-twilight: #d4c5ff;
   --accent-breeze: #b0d3f0;
-  --accent-midnight: #141e30;
+  --accent-midnight: #1e2a3e;
 }
 
 /* ─── Base Styles ─── */
