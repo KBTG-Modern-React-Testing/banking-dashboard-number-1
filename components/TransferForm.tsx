@@ -1,22 +1,22 @@
 "use client";
 
 import { useState, useCallback, type FormEvent } from "react";
-import { useDashboard } from "@/components/DashboardContext";
+import { useTransfer } from "@/lib/hooks/use-transfer";
 import { Send, Loader2 } from "lucide-react";
 
 interface FormErrors {
   amount?: string;
   recipient?: string;
+  network?: string;
 }
 
 export function TransferForm() {
-  const { addTransaction } = useDashboard();
+  const { mutateAsync, isPending } = useTransfer();
 
   const [amount, setAmount] = useState("");
   const [recipient, setRecipient] = useState("");
   const [description, setDescription] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
   const validate = useCallback((): FormErrors => {
@@ -40,15 +40,15 @@ export function TransferForm() {
     async (e: FormEvent) => {
       e.preventDefault();
       setSuccessMessage("");
+      setErrors((prev) => ({ ...prev, network: undefined }));
 
       const errs = validate();
       setErrors(errs);
 
       if (Object.keys(errs).length > 0) return;
 
-      setIsSubmitting(true);
       try {
-        await addTransaction({
+        await mutateAsync({
           amount: parseFloat(amount),
           recipient: recipient.trim(),
           description: description.trim() || undefined,
@@ -64,15 +64,25 @@ export function TransferForm() {
         // Clear success message after 3s
         setTimeout(() => setSuccessMessage(""), 3000);
       } catch (err) {
-        setErrors({
-          amount:
-            err instanceof Error ? err.message : "Transfer failed. Try again.",
-        });
-      } finally {
-        setIsSubmitting(false);
+        // Distinguish network errors from API validation errors
+        if (err instanceof TypeError && err.message === "Failed to fetch") {
+          // Network error — preserve form data for retry
+          setErrors((prev) => ({
+            ...prev,
+            network:
+              "Unable to connect to banking services. Please try again.",
+          }));
+        } else {
+          setErrors({
+            amount:
+              err instanceof Error
+                ? err.message
+                : "Transfer failed. Try again.",
+          });
+        }
       }
     },
-    [amount, recipient, description, validate, addTransaction]
+    [amount, recipient, description, validate, mutateAsync]
   );
 
   return (
@@ -103,6 +113,28 @@ export function TransferForm() {
       </span>
 
       <form onSubmit={handleSubmit} noValidate>
+        {/* Network error banner */}
+        {errors.network && (
+          <div
+            role="alert"
+            className="animate-fade-in"
+            style={{
+              marginBottom: 16,
+              padding: "10px 16px",
+              borderRadius: 8,
+              backgroundColor: "rgba(248, 113, 113, 0.1)",
+              border: "1px solid rgba(248, 113, 113, 0.2)",
+              color: "#f87171",
+              fontSize: 13,
+              fontFamily: "var(--font-mono)",
+              letterSpacing: "0.5px",
+              textAlign: "center",
+            }}
+          >
+            ✕ {errors.network}
+          </div>
+        )}
+
         {/* Amount */}
         <div style={{ marginBottom: 16 }}>
           <label
@@ -233,7 +265,7 @@ export function TransferForm() {
         {/* Submit button */}
         <button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isPending}
           className="btn-pill-primary"
           style={{
             width: "100%",
@@ -241,13 +273,11 @@ export function TransferForm() {
             fontSize: 14,
           }}
         >
-          {isSubmitting ? (
+          {isPending ? (
             <>
               <Loader2
                 size={16}
-                style={{
-                  animation: "spin 1s linear infinite",
-                }}
+                className="animate-spin"
               />
               Processing...
             </>
@@ -280,18 +310,6 @@ export function TransferForm() {
           </div>
         )}
       </form>
-
-      {/* Spin animation for loader */}
-      <style jsx>{`
-        @keyframes spin {
-          from {
-            transform: rotate(0deg);
-          }
-          to {
-            transform: rotate(360deg);
-          }
-        }
-      `}</style>
     </section>
   );
 }

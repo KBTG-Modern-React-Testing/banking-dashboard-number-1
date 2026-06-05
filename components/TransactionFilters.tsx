@@ -1,12 +1,18 @@
 "use client";
 
-import { useDashboard, type FilterStatus } from "@/components/DashboardContext";
+import type { FilterStatus } from "@/lib/types";
 
 const FILTERS: FilterStatus[] = ["All", "Pending", "Completed", "Failed"];
 
-export function TransactionFilters() {
-  const { activeFilter, setFilter } = useDashboard();
+interface TransactionFiltersProps {
+  activeFilter: FilterStatus;
+  setFilter: (filter: FilterStatus) => void;
+}
 
+export function TransactionFilters({
+  activeFilter,
+  setFilter,
+}: TransactionFiltersProps) {
   return (
     <div
       id="transaction-filters"

@@ -1,18 +1,11 @@
 "use client";
 
-import { useDashboard } from "@/components/DashboardContext";
-
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount);
-}
+import { useBalance } from "@/lib/hooks/use-balance";
+import { formatCurrency } from "@/lib/formatters";
+import { RefreshCw } from "lucide-react";
 
 export function BalanceCard() {
-  const { balance, isLoading } = useDashboard();
+  const { balance, isLoading, isError, refetch } = useBalance();
 
   return (
     <section
@@ -28,8 +21,9 @@ export function BalanceCard() {
           left: 0,
           right: 0,
           height: 2,
-          background:
-            "linear-gradient(90deg, var(--accent-sunset), var(--accent-dusk), var(--accent-twilight))",
+          background: isError
+            ? "linear-gradient(90deg, #f87171, #ef4444, #dc2626)"
+            : "linear-gradient(90deg, var(--accent-sunset), var(--accent-dusk), var(--accent-twilight))",
         }}
       />
 
@@ -49,6 +43,42 @@ export function BalanceCard() {
             animation: "pulse-glow 2s ease-in-out infinite",
           }}
         />
+      ) : isError ? (
+        <div role="alert">
+          <h1
+            className="text-display-md"
+            style={{
+              color: "var(--body-mid)",
+              margin: 0,
+              marginTop: 4,
+            }}
+          >
+            $ —
+          </h1>
+          <p
+            style={{
+              color: "#f87171",
+              fontSize: 13,
+              marginTop: 8,
+              fontFamily: "var(--font-mono)",
+              letterSpacing: "0.5px",
+            }}
+          >
+            Unable to load balance
+          </p>
+          <button
+            onClick={() => refetch()}
+            className="btn-pill-outline-sm"
+            style={{
+              marginTop: 8,
+              color: "#f87171",
+              borderColor: "rgba(248, 113, 113, 0.3)",
+            }}
+          >
+            <RefreshCw size={12} />
+            Retry
+          </button>
+        </div>
       ) : (
         <h1
           className="text-display-md"

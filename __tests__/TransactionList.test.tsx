@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { TransactionList } from "@/components/TransactionList";
-import { DashboardProvider } from "@/components/DashboardContext";
+import { renderWithProviders } from "./helpers/test-utils";
+import { mockFetchResponses } from "./helpers/mock-fetch";
 
 const mockTransactions = [
   {
@@ -37,45 +38,21 @@ const mockTransactions = [
   },
 ];
 
-function mockFetchResponses(transactions = mockTransactions) {
-  (global.fetch as ReturnType<typeof vi.fn>).mockImplementation(
-    (url: string) => {
-      if (url.includes("/api/balance")) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({ balance: 15000.5, currency: "USD" }),
-        });
-      }
-      if (url.includes("/api/transactions")) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({ transactions }),
-        });
-      }
-      return Promise.resolve({ ok: false });
-    }
-  );
-}
-
-function renderWithProvider(ui: React.ReactElement) {
-  return render(<DashboardProvider>{ui}</DashboardProvider>);
-}
-
 describe("TransactionList", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it("displays the TRANSACTIONS eyebrow label", () => {
-    mockFetchResponses();
-    renderWithProvider(<TransactionList />);
+    mockFetchResponses({ transactions: mockTransactions });
+    renderWithProviders(<TransactionList />);
     const labels = screen.getAllByText("TRANSACTIONS");
     expect(labels.length).toBeGreaterThanOrEqual(1);
   });
 
   it("shows transaction descriptions after loading", async () => {
-    mockFetchResponses();
-    renderWithProvider(<TransactionList />);
+    mockFetchResponses({ transactions: mockTransactions });
+    renderWithProviders(<TransactionList />);
 
     expect(
       await screen.findByText("Payment to vendor", {}, { timeout: 3000 })
@@ -85,8 +62,8 @@ describe("TransactionList", () => {
   });
 
   it("shows formatted amounts for each transaction", async () => {
-    mockFetchResponses();
-    renderWithProvider(<TransactionList />);
+    mockFetchResponses({ transactions: mockTransactions });
+    renderWithProviders(<TransactionList />);
 
     expect(
       await screen.findByText("$1,500.00", {}, { timeout: 3000 })
@@ -96,8 +73,8 @@ describe("TransactionList", () => {
   });
 
   it("shows status badges for each transaction", async () => {
-    mockFetchResponses();
-    renderWithProvider(<TransactionList />);
+    mockFetchResponses({ transactions: mockTransactions });
+    renderWithProviders(<TransactionList />);
 
     // Wait for data to load
     await screen.findByText("Payment to vendor", {}, { timeout: 3000 });
@@ -114,8 +91,8 @@ describe("TransactionList", () => {
   });
 
   it("shows item count", async () => {
-    mockFetchResponses();
-    renderWithProvider(<TransactionList />);
+    mockFetchResponses({ transactions: mockTransactions });
+    renderWithProviders(<TransactionList />);
 
     await waitFor(() => {
       // The count "3" with "ITEMS" label
@@ -125,8 +102,8 @@ describe("TransactionList", () => {
   });
 
   it("shows recipient names", async () => {
-    mockFetchResponses();
-    renderWithProvider(<TransactionList />);
+    mockFetchResponses({ transactions: mockTransactions });
+    renderWithProviders(<TransactionList />);
 
     expect(
       await screen.findByText("Acme Corp", {}, { timeout: 3000 })
@@ -136,8 +113,8 @@ describe("TransactionList", () => {
   });
 
   it("shows 'No transactions' message when list is empty", async () => {
-    mockFetchResponses([]);
-    renderWithProvider(<TransactionList />);
+    mockFetchResponses({ transactions: [] });
+    renderWithProviders(<TransactionList />);
 
     await waitFor(() => {
       const msgs = screen.getAllByText("No transactions");
@@ -146,8 +123,8 @@ describe("TransactionList", () => {
   });
 
   it("shows filter buttons: All, Pending, Completed, Failed", () => {
-    mockFetchResponses();
-    renderWithProvider(<TransactionList />);
+    mockFetchResponses({ transactions: mockTransactions });
+    renderWithProviders(<TransactionList />);
 
     const allBtns = screen.getAllByText("All");
     expect(allBtns.length).toBeGreaterThanOrEqual(1);
@@ -163,9 +140,9 @@ describe("TransactionList", () => {
   });
 
   it("filters to show only Pending transactions when Pending filter clicked", async () => {
-    mockFetchResponses();
+    mockFetchResponses({ transactions: mockTransactions });
     const user = userEvent.setup();
-    renderWithProvider(<TransactionList />);
+    renderWithProviders(<TransactionList />);
 
     // Wait for data to load
     await screen.findByText("Payment to vendor", {}, { timeout: 3000 });
@@ -187,9 +164,9 @@ describe("TransactionList", () => {
   });
 
   it("returns to all transactions when All filter clicked", async () => {
-    mockFetchResponses();
+    mockFetchResponses({ transactions: mockTransactions });
     const user = userEvent.setup();
-    renderWithProvider(<TransactionList />);
+    renderWithProviders(<TransactionList />);
 
     await screen.findByText("Payment to vendor", {}, { timeout: 3000 });
 
@@ -216,9 +193,9 @@ describe("TransactionList", () => {
   it("shows message when filter has no matching results", async () => {
     // Only completed transactions — no failed
     const completedOnly = [mockTransactions[0]];
-    mockFetchResponses(completedOnly);
+    mockFetchResponses({ transactions: completedOnly });
     const user = userEvent.setup();
-    renderWithProvider(<TransactionList />);
+    renderWithProviders(<TransactionList />);
 
     await screen.findByText("Payment to vendor", {}, { timeout: 3000 });
 
@@ -233,5 +210,29 @@ describe("TransactionList", () => {
       const msgs = screen.getAllByText("No transactions");
       expect(msgs.length).toBeGreaterThanOrEqual(1);
     });
+  });
+
+  // --- Error state tests ---
+
+  it("shows 'Unable to load transactions' when fetch fails", async () => {
+    mockFetchResponses({ transactionsFail: true });
+    renderWithProviders(<TransactionList />);
+
+    expect(
+      await screen.findByText(
+        "Unable to load transactions",
+        {},
+        { timeout: 3000 }
+      )
+    ).toBeDefined();
+  });
+
+  it("shows a Retry button when fetch fails", async () => {
+    mockFetchResponses({ transactionsFail: true });
+    renderWithProviders(<TransactionList />);
+
+    expect(
+      await screen.findByText("Retry", {}, { timeout: 3000 })
+    ).toBeDefined();
   });
 });

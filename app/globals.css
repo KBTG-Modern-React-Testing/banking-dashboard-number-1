@@ -413,6 +413,11 @@
     50% { opacity: 1; }
   }
 
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
   .animate-fade-in {
     animation: fade-in 0.4s ease-out both;
   }
@@ -423,5 +428,53 @@
 
   .animate-pulse-glow {
     animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  .animate-spin {
+    animation: spin 1s linear infinite;
+  }
+
+  /* ─── Dashboard Grid Layout ─── */
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  @media (min-width: 768px) {
+    .dashboard-grid {
+      grid-template-columns: 380px 1fr;
+      gap: 32px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .dashboard-grid {
+      grid-template-columns: 420px 1fr;
+    }
+  }
+
+  .dashboard-col-left {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .dashboard-col-right {
+    min-width: 0;
+  }
+
+  /* ─── NavBar Responsive ─── */
+  @media (max-width: 767px) {
+    .desktop-nav {
+      display: none !important;
+    }
+    .mobile-menu-btn {
+      display: block !important;
+    }
+  }
+  @media (min-width: 768px) {
+    .mobile-menu-dropdown {
+      display: none !important;
+    }
   }
 }

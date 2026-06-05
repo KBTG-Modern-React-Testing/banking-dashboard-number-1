@@ -1,17 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import type { Transaction } from "@/lib/types";
 
-/* ─── Types ─── */
-
-interface Transaction {
-  id: string;
-  amount: number;
-  currency: string;
-  status: "Pending" | "Completed" | "Failed";
-  description: string;
-  recipient?: string;
-  createdAt: string;
-  updatedAt: string;
-}
 
 /* ─── In-Memory Store ─── */
 

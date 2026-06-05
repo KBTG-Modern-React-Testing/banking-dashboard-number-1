@@ -1,27 +1,11 @@
 "use client";
 
-import { useDashboard, type Transaction } from "@/components/DashboardContext";
+import { useState, useCallback } from "react";
+import { useTransactions } from "@/lib/hooks/use-transactions";
 import { TransactionFilters } from "@/components/TransactionFilters";
-import { ArrowUpRight, ArrowDownLeft, AlertCircle } from "lucide-react";
-
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount);
-}
-
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
-}
+import { ArrowUpRight, ArrowDownLeft, AlertCircle, RefreshCw } from "lucide-react";
+import { formatCurrency, formatDate } from "@/lib/formatters";
+import type { Transaction, FilterStatus } from "@/lib/types";
 
 function StatusBadge({ status }: { status: Transaction["status"] }) {
   const badgeClass =
@@ -179,7 +163,17 @@ function TransactionRow({ tx, index }: { tx: Transaction; index: number }) {
 }
 
 export function TransactionList() {
-  const { filteredTransactions, isLoading, activeFilter } = useDashboard();
+  const { transactions, isLoading, isError, refetch } = useTransactions();
+  const [activeFilter, setActiveFilter] = useState<FilterStatus>("All");
+
+  const setFilter = useCallback((filter: FilterStatus) => {
+    setActiveFilter(filter);
+  }, []);
+
+  const filteredTransactions =
+    activeFilter === "All"
+      ? transactions
+      : transactions.filter((tx) => tx.status === activeFilter);
 
   return (
     <section
@@ -215,7 +209,7 @@ export function TransactionList() {
           </span>
         </div>
 
-        <TransactionFilters />
+        <TransactionFilters activeFilter={activeFilter} setFilter={setFilter} />
       </div>
 
       {/* Divider */}
@@ -269,6 +263,43 @@ export function TransactionList() {
               />
             </div>
           ))}
+        </div>
+      ) : isError ? (
+        <div
+          role="alert"
+          style={{
+            padding: "48px 0",
+            textAlign: "center",
+          }}
+        >
+          <AlertCircle
+            size={32}
+            color="#f87171"
+            style={{ margin: "0 auto 12px" }}
+          />
+          <div
+            className="text-body-md"
+            style={{ color: "#f87171", marginBottom: 4 }}
+          >
+            Unable to load transactions
+          </div>
+          <div
+            className="text-caption-mono-sm"
+            style={{ color: "var(--body-mid)", marginBottom: 16 }}
+          >
+            PLEASE CHECK YOUR CONNECTION AND TRY AGAIN
+          </div>
+          <button
+            onClick={() => refetch()}
+            className="btn-pill-outline-sm"
+            style={{
+              color: "#f87171",
+              borderColor: "rgba(248, 113, 113, 0.3)",
+            }}
+          >
+            <RefreshCw size={12} />
+            Retry
+          </button>
         </div>
       ) : filteredTransactions.length === 0 ? (
         <div
