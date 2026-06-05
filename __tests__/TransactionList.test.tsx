@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { http, HttpResponse } from "msw";
+import { server } from "../mocks/server";
 import { TransactionList } from "@/components/TransactionList";
 import { renderWithProviders } from "./helpers/test-utils";
-import { mockFetchResponses } from "./helpers/mock-fetch";
 
 const mockTransactions = [
   {
@@ -38,20 +39,28 @@ const mockTransactions = [
   },
 ];
 
+function useTransactionHandlers(transactions = mockTransactions) {
+  server.use(
+    http.get("/api/transactions", () =>
+      HttpResponse.json({ transactions })
+    )
+  );
+}
+
 describe("TransactionList", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it("displays the TRANSACTIONS eyebrow label", () => {
-    mockFetchResponses({ transactions: mockTransactions });
+    useTransactionHandlers();
     renderWithProviders(<TransactionList />);
     const labels = screen.getAllByText("TRANSACTIONS");
     expect(labels.length).toBeGreaterThanOrEqual(1);
   });
 
   it("shows transaction descriptions after loading", async () => {
-    mockFetchResponses({ transactions: mockTransactions });
+    useTransactionHandlers();
     renderWithProviders(<TransactionList />);
 
     expect(
@@ -62,7 +71,7 @@ describe("TransactionList", () => {
   });
 
   it("shows formatted amounts for each transaction", async () => {
-    mockFetchResponses({ transactions: mockTransactions });
+    useTransactionHandlers();
     renderWithProviders(<TransactionList />);
 
     expect(
@@ -73,7 +82,7 @@ describe("TransactionList", () => {
   });
 
   it("shows status badges for each transaction", async () => {
-    mockFetchResponses({ transactions: mockTransactions });
+    useTransactionHandlers();
     renderWithProviders(<TransactionList />);
 
     // Wait for data to load
@@ -91,7 +100,7 @@ describe("TransactionList", () => {
   });
 
   it("shows item count", async () => {
-    mockFetchResponses({ transactions: mockTransactions });
+    useTransactionHandlers();
     renderWithProviders(<TransactionList />);
 
     await waitFor(() => {
@@ -102,7 +111,7 @@ describe("TransactionList", () => {
   });
 
   it("shows recipient names", async () => {
-    mockFetchResponses({ transactions: mockTransactions });
+    useTransactionHandlers();
     renderWithProviders(<TransactionList />);
 
     expect(
@@ -113,7 +122,7 @@ describe("TransactionList", () => {
   });
 
   it("shows 'No transactions' message when list is empty", async () => {
-    mockFetchResponses({ transactions: [] });
+    useTransactionHandlers([]);
     renderWithProviders(<TransactionList />);
 
     await waitFor(() => {
@@ -123,7 +132,7 @@ describe("TransactionList", () => {
   });
 
   it("shows filter buttons: All, Pending, Completed, Failed", () => {
-    mockFetchResponses({ transactions: mockTransactions });
+    useTransactionHandlers();
     renderWithProviders(<TransactionList />);
 
     const allBtns = screen.getAllByText("All");
@@ -140,7 +149,7 @@ describe("TransactionList", () => {
   });
 
   it("filters to show only Pending transactions when Pending filter clicked", async () => {
-    mockFetchResponses({ transactions: mockTransactions });
+    useTransactionHandlers();
     const user = userEvent.setup();
     renderWithProviders(<TransactionList />);
 
@@ -164,7 +173,7 @@ describe("TransactionList", () => {
   });
 
   it("returns to all transactions when All filter clicked", async () => {
-    mockFetchResponses({ transactions: mockTransactions });
+    useTransactionHandlers();
     const user = userEvent.setup();
     renderWithProviders(<TransactionList />);
 
@@ -193,7 +202,7 @@ describe("TransactionList", () => {
   it("shows message when filter has no matching results", async () => {
     // Only completed transactions — no failed
     const completedOnly = [mockTransactions[0]];
-    mockFetchResponses({ transactions: completedOnly });
+    useTransactionHandlers(completedOnly);
     const user = userEvent.setup();
     renderWithProviders(<TransactionList />);
 
@@ -215,7 +224,7 @@ describe("TransactionList", () => {
   // --- Error state tests ---
 
   it("shows 'Unable to load transactions' when fetch fails", async () => {
-    mockFetchResponses({ transactionsFail: true });
+    server.use(http.get("/api/transactions", () => HttpResponse.error()));
     renderWithProviders(<TransactionList />);
 
     expect(
@@ -228,7 +237,7 @@ describe("TransactionList", () => {
   });
 
   it("shows a Retry button when fetch fails", async () => {
-    mockFetchResponses({ transactionsFail: true });
+    server.use(http.get("/api/transactions", () => HttpResponse.error()));
     renderWithProviders(<TransactionList />);
 
     expect(

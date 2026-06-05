@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { screen } from "@testing-library/react";
+import { http, HttpResponse } from "msw";
+import { server } from "../mocks/server";
 import { BalanceCard } from "@/components/BalanceCard";
 import { renderWithProviders } from "./helpers/test-utils";
-import { mockFetchResponses } from "./helpers/mock-fetch";
 
 describe("BalanceCard", () => {
   beforeEach(() => {
@@ -10,7 +11,11 @@ describe("BalanceCard", () => {
   });
 
   it("displays formatted balance after loading", async () => {
-    mockFetchResponses({ balance: 15000.5 });
+    server.use(
+      http.get("/api/balance", () =>
+        HttpResponse.json({ balance: 15000.5, currency: "USD" })
+      )
+    );
     renderWithProviders(<BalanceCard />);
 
     expect(
@@ -19,7 +24,11 @@ describe("BalanceCard", () => {
   });
 
   it("displays the ACCOUNT BALANCE eyebrow label", async () => {
-    mockFetchResponses({ balance: 15000.5 });
+    server.use(
+      http.get("/api/balance", () =>
+        HttpResponse.json({ balance: 15000.5, currency: "USD" })
+      )
+    );
     renderWithProviders(<BalanceCard />);
 
     const labels = await screen.findAllByText("ACCOUNT BALANCE");
@@ -27,7 +36,11 @@ describe("BalanceCard", () => {
   });
 
   it("displays the USD currency label", async () => {
-    mockFetchResponses({ balance: 15000.5 });
+    server.use(
+      http.get("/api/balance", () =>
+        HttpResponse.json({ balance: 15000.5, currency: "USD" })
+      )
+    );
     renderWithProviders(<BalanceCard />);
 
     const labels = await screen.findAllByText(
@@ -39,7 +52,11 @@ describe("BalanceCard", () => {
   });
 
   it("formats large balances with commas", async () => {
-    mockFetchResponses({ balance: 1234567.89 });
+    server.use(
+      http.get("/api/balance", () =>
+        HttpResponse.json({ balance: 1234567.89, currency: "USD" })
+      )
+    );
     renderWithProviders(<BalanceCard />);
 
     expect(
@@ -48,7 +65,11 @@ describe("BalanceCard", () => {
   });
 
   it("formats zero balance correctly", async () => {
-    mockFetchResponses({ balance: 0 });
+    server.use(
+      http.get("/api/balance", () =>
+        HttpResponse.json({ balance: 0, currency: "USD" })
+      )
+    );
     renderWithProviders(<BalanceCard />);
 
     expect(
@@ -59,7 +80,7 @@ describe("BalanceCard", () => {
   // --- Error state tests ---
 
   it("shows 'Unable to load balance' when fetch fails", async () => {
-    mockFetchResponses({ balanceFail: true });
+    server.use(http.get("/api/balance", () => HttpResponse.error()));
     renderWithProviders(<BalanceCard />);
 
     expect(
@@ -68,7 +89,7 @@ describe("BalanceCard", () => {
   });
 
   it("shows a Retry button when fetch fails", async () => {
-    mockFetchResponses({ balanceFail: true });
+    server.use(http.get("/api/balance", () => HttpResponse.error()));
     renderWithProviders(<BalanceCard />);
 
     expect(
@@ -77,7 +98,7 @@ describe("BalanceCard", () => {
   });
 
   it("does NOT display '$0.00' when fetch fails", async () => {
-    mockFetchResponses({ balanceFail: true });
+    server.use(http.get("/api/balance", () => HttpResponse.error()));
     renderWithProviders(<BalanceCard />);
 
     // Wait for error state to render

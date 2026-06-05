@@ -1,7 +1,6 @@
 import { test, expect } from "@playwright/test";
-import { EXPECTED_BALANCE } from "./fixtures/test-data";
 
-test.describe("Homepage Smoke Tests @smoke @critical", () => {
+test.describe("Homepage Smoke Tests @smoke @critical @test", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
   });
@@ -14,8 +13,8 @@ test.describe("Homepage Smoke Tests @smoke @critical", () => {
   });
 
   test("account balance displays a valid dollar amount", async ({ page }) => {
-    await expect(page.locator("#balance-card")).toContainText(
-      EXPECTED_BALANCE,
+    await expect(page.locator("#balance-card h1")).toHaveText(
+      /^\$[\d,]+\.\d{2}$/,
       { timeout: 10_000 }
     );
   });

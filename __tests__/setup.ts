@@ -1,5 +1,11 @@
-import { vi, afterEach } from "vitest";
+import { vi, afterEach, beforeAll, afterAll } from "vitest";
 import { cleanup } from "@testing-library/react";
+import { server } from "../mocks/server";
+
+// ─── MSW server lifecycle ───
+beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
 
 // Auto-cleanup after each test
 afterEach(() => {
@@ -30,9 +36,6 @@ const localStorageMock = (() => {
 Object.defineProperty(window, "localStorage", {
   value: localStorageMock,
 });
-
-// Mock fetch
-global.fetch = vi.fn();
 
 // Mock IntersectionObserver
 class MockIntersectionObserver {

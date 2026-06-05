@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { http, HttpResponse } from "msw";
+import { server } from "../mocks/server";
 import { TransferForm } from "@/components/TransferForm";
 import { renderWithProviders } from "./helpers/test-utils";
-import { mockFetchResponses } from "./helpers/mock-fetch";
 
 describe("TransferForm", () => {
   beforeEach(() => {
@@ -11,14 +12,12 @@ describe("TransferForm", () => {
   });
 
   it("displays the TRANSFER FUNDS eyebrow label", () => {
-    mockFetchResponses();
     renderWithProviders(<TransferForm />);
     const labels = screen.getAllByText("TRANSFER FUNDS");
     expect(labels.length).toBeGreaterThanOrEqual(1);
   });
 
   it("has Amount, Recipient, and Description input fields", () => {
-    mockFetchResponses();
     renderWithProviders(<TransferForm />);
 
     expect(screen.getByLabelText(/AMOUNT/i)).toBeDefined();
@@ -27,7 +26,6 @@ describe("TransferForm", () => {
   });
 
   it("has a Transfer submit button", () => {
-    mockFetchResponses();
     renderWithProviders(<TransferForm />);
 
     const transferBtns = screen.getAllByText("Transfer");
@@ -35,7 +33,6 @@ describe("TransferForm", () => {
   });
 
   it("shows validation error when submitting without amount", async () => {
-    mockFetchResponses();
     const user = userEvent.setup();
     renderWithProviders(<TransferForm />);
 
@@ -54,7 +51,6 @@ describe("TransferForm", () => {
   });
 
   it("shows validation error when submitting without recipient", async () => {
-    mockFetchResponses();
     const user = userEvent.setup();
     renderWithProviders(<TransferForm />);
 
@@ -73,7 +69,6 @@ describe("TransferForm", () => {
   });
 
   it("shows validation error for zero amount", async () => {
-    mockFetchResponses();
     const user = userEvent.setup();
     renderWithProviders(<TransferForm />);
 
@@ -92,7 +87,6 @@ describe("TransferForm", () => {
   });
 
   it("shows validation error for negative amount", async () => {
-    mockFetchResponses();
     const user = userEvent.setup();
     renderWithProviders(<TransferForm />);
 
@@ -111,7 +105,6 @@ describe("TransferForm", () => {
   });
 
   it("clears form after successful submission", async () => {
-    mockFetchResponses();
     const user = userEvent.setup();
     renderWithProviders(<TransferForm />);
 
@@ -143,7 +136,6 @@ describe("TransferForm", () => {
   });
 
   it("shows success confirmation after valid submission", async () => {
-    mockFetchResponses();
     const user = userEvent.setup();
     renderWithProviders(<TransferForm />);
 
@@ -160,7 +152,29 @@ describe("TransferForm", () => {
   });
 
   it("calls POST /api/transactions with correct payload on valid submit", async () => {
-    mockFetchResponses();
+    let capturedBody: Record<string, unknown> | undefined;
+
+    server.use(
+      http.post("/api/transactions", async ({ request }) => {
+        capturedBody = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json(
+          {
+            transaction: {
+              id: "txn_new",
+              amount: capturedBody.amount,
+              currency: "USD",
+              status: "Pending",
+              description: capturedBody.description || "Transfer",
+              recipient: capturedBody.recipient,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            },
+          },
+          { status: 201 }
+        );
+      })
+    );
+
     const user = userEvent.setup();
     renderWithProviders(<TransferForm />);
 
@@ -176,22 +190,14 @@ describe("TransferForm", () => {
       expect(msgs.length).toBeGreaterThanOrEqual(1);
     });
 
-    // Verify the POST call was made
-    const fetchCalls = (global.fetch as ReturnType<typeof vi.fn>).mock.calls;
-    const postCall = fetchCalls.find(
-      ([url, opts]: [string, RequestInit]) =>
-        url.includes("/api/transactions") && opts?.method === "POST"
-    );
-
-    expect(postCall).toBeDefined();
-    const body = JSON.parse(postCall![1].body as string);
-    expect(body.amount).toBe(250.5);
-    expect(body.recipient).toBe("Jane Smith");
-    expect(body.description).toBe("Dinner payment");
+    // Verify the POST payload was captured correctly
+    expect(capturedBody).toBeDefined();
+    expect(capturedBody!.amount).toBe(250.5);
+    expect(capturedBody!.recipient).toBe("Jane Smith");
+    expect(capturedBody!.description).toBe("Dinner payment");
   });
 
   it("description field is optional - form submits without it", async () => {
-    mockFetchResponses();
     const user = userEvent.setup();
     renderWithProviders(<TransferForm />);
 
@@ -208,7 +214,6 @@ describe("TransferForm", () => {
   });
 
   it("clears error messages when user starts typing in errored field", async () => {
-    mockFetchResponses();
     const user = userEvent.setup();
     renderWithProviders(<TransferForm />);
 
@@ -239,7 +244,10 @@ describe("TransferForm", () => {
   // --- Network error tests ---
 
   it("shows network error message when POST fails due to network error", async () => {
-    mockFetchResponses({ postNetworkError: true });
+    server.use(
+      http.post("/api/transactions", () => HttpResponse.error())
+    );
+
     const user = userEvent.setup();
     renderWithProviders(<TransferForm />);
 
@@ -258,7 +266,10 @@ describe("TransferForm", () => {
   });
 
   it("does NOT clear form inputs when POST fails due to network error", async () => {
-    mockFetchResponses({ postNetworkError: true });
+    server.use(
+      http.post("/api/transactions", () => HttpResponse.error())
+    );
+
     const user = userEvent.setup();
     renderWithProviders(<TransferForm />);
 

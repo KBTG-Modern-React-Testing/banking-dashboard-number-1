@@ -14,6 +14,12 @@ export const INVALID_TRANSFERS = {
 
 export const EXPECTED_BALANCE = "$15,000.50";
 
+/** Balance after a $100 transfer settles: $15,000.50 - $100 = $14,900.50 */
+export const EXPECTED_BALANCE_AFTER_TRANSFER = "$14,900.50";
+
+/** Server-side settlement delay in ms (must match lib/store.ts) */
+export const SETTLE_DELAY_MS = 3_000;
+
 export const EXPECTED_TRANSACTIONS = {
   first: {
     description: "Payment to vendor",

@@ -6,9 +6,10 @@ test.describe("Transfer Form - Valid Submission @e2e @critical", () => {
     await page.goto("/");
     // Wait for page to be fully loaded
     await expect(page.locator("#transfer-form")).toBeVisible();
-    await expect(page.locator("#balance-card")).toContainText("$15,000.50", {
-      timeout: 10_000,
-    });
+    await expect(page.locator("#balance-card h1")).toHaveText(
+      /^\$[\d,]+\.\d{2}$/,
+      { timeout: 10_000 }
+    );
   });
 
   test("successfully submits a transfer with all fields", async ({ page }) => {

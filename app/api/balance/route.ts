@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
+import { getBalance } from "@/lib/store";
 
 /* ─── GET /api/balance ─── */
 
 export async function GET() {
-  return NextResponse.json({
-    balance: 15000.5,
-    currency: "USD",
-  });
+  return NextResponse.json(getBalance());
 }

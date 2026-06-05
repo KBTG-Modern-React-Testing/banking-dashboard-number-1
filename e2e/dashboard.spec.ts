@@ -1,12 +1,12 @@
 import { test, expect } from "@playwright/test";
-import { EXPECTED_BALANCE, EXPECTED_TRANSACTIONS } from "./fixtures/test-data";
+import { EXPECTED_TRANSACTIONS } from "./fixtures/test-data";
 
 test.describe("Account Balance @e2e", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
-    // Wait for balance to load
-    await expect(page.locator("#balance-card")).toContainText(
-      EXPECTED_BALANCE,
+    // Wait for balance to load (any valid dollar amount)
+    await expect(page.locator("#balance-card h1")).toHaveText(
+      /^\$[\d,]+\.\d{2}$/,
       { timeout: 10_000 }
     );
   });
@@ -14,7 +14,7 @@ test.describe("Account Balance @e2e", () => {
   test("displays formatted balance with dollar sign and commas", async ({
     page,
   }) => {
-    await expect(page.locator("#balance-card")).toContainText(EXPECTED_BALANCE);
+    await expect(page.locator("#balance-card h1")).toHaveText(/^\$[\d,]+\.\d{2}$/);
   });
 
   test("shows ACCOUNT BALANCE label", async ({ page }) => {
